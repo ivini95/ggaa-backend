@@ -1,8 +1,3 @@
-# GGAA - Gestão de Grupos e Acompanhamento de Aprendizagem
-
-> API RESTful desenvolvida em **Node.js, Express, TypeScript, Prisma ORM e PostgreSQL**, focada na gestão pedagógica de turmas, controle de entregas, avaliações por grupos, diário de classe e registro de ocorrências para professores.
-
----
 
 ## Visão Geral do Projeto
 
@@ -12,166 +7,48 @@ O projeto foi construído seguindo os princípios de **Arquitetura em Camadas (L
 
 ---
 
-## Tecnologias e Ferramentas
+# GGAA - Gestão de Grupos e Acompanhamento de Aprendizagem
 
-### **Backend & Banco de Dados**
-* **Node.js** (Ambiente de execução)
-* **TypeScript** (Tipagem estática e segurança)
-* **Express.js** (Framework web HTTP)
-* **Prisma ORM** (Modelagem, consultas e controle de migrações SQL)
-* **PostgreSQL 16** (Banco de dados relacional)
-* **Docker & Docker Compose** (Containerização da infraestrutura local)
-
-### **Segurança & Qualidade de Código**
-* **JWT (JSON Web Token)** (Autenticação stateless de professores)
-* **Bcrypt.js** (Criptografia hash de senhas)
-* **CORS & Dotenv** (Segurança HTTP e gestão de variáveis de ambiente)
+API RESTful em **Node.js, Express, TypeScript e PostgreSQL**, projetada para centralizar a gestão pedagógica de turmas, avaliações em grupo, diário de classe e acompanhamento individual de alunos.
 
 ---
 
-## Arquitetura & Design do Banco de Dados
+## Tech Stack & Arquitetura
 
-A aplicação utiliza um banco relacional modelado para garantir integridade referencial com **exclusões em cascata (`CASCADE`)** e suporte a **operações transacionais**.
-
-```text
-[ Cliente HTTP / Front-end ]
-              │
-         (REST / JSON)
-              ▼
-   [ Express Router / Middlewares ] ──► (Auth JWT & Validações)
-              │
-              ▼
-     [ Controllers Layer ]        ──► (Tratamento de req/res HTTP)
-              │
-              ▼
-      [ Services / UseCases ]     ──► (Regras de negócio do sistema)
-              │
-              ▼
-    [ Prisma ORM / PostgreSQL ]    ──► (Acesso ao banco containerizado no Docker)
-
-# GGAA Backend
-
-## Principais Módulos do Sistema
-
-- **Professores & Autenticação:** Gestão de acesso com senhas criptografadas e log de auditoria de alterações.
-- **Turmas & Alunos:** Matrícula em lote, controle de status do aluno e associação muitos-para-muitos (N:M).
-- **Grupos & Divisão de Tarefas:** Criação de equipes por turma e distribuição interna de tarefas.
-- **Atividades & Avaliações:** Criação de atividades individuais ou em grupo, matriz de notas e critérios de avaliação.
-- **Diário de Classe & Ocorrências:** Registro sequencial de aulas ministradas e diário de adaptações pedagógicas.
+* **Core:** Node.js | TypeScript | Express.js
+* **Banco de Dados & ORM:** PostgreSQL 16 | Prisma ORM (Migrations & Transactions)
+* **Infraestrutura & Segurança:** Docker Compose | JWT Auth | Bcrypt.js
+* **Padrão Arquitetural:** Layered Architecture (Controllers -> Services -> Repositories)
 
 ---
 
-# 🚀 Como Executar o Projeto Localmente
+## Principais Recursos
 
-## Pré-requisitos
+* **Autenticação Stateless:** Login de professores com senhas criptografadas via Bcrypt e tokens JWT.
+* **Gestão de Turmas & Alunos:** Matrícula em lote e relacionamentos N:M.
+* **Avaliações em Equipe:** Criação de grupos com divisão interna de tarefas e matriz de notas.
+* **Diário de Classe & Ocorrências:** Registro histórico de aulas, adaptações pedagógicas e logs de alterações.
 
-Antes de começar, você precisará ter instalado em sua máquina:
+---
 
-- Node.js (versão 18 ou superior)
-- Git
-- Docker Desktop (com Docker Compose ativo)
+## Como Executar o Projeto
 
-## Passo a Passo
+### Pré-requisitos
+* Node.js (v18+) e Docker Desktop ativos.
 
-### 1. Clonar o repositório
-
-```bash
-git clone https://github.com/SEU_USUARIO/ggaa-backend.git
-cd ggaa-backend
-```
-
-### 2. Instalar as dependências
+### Passo a Passo
 
 ```bash
+# 1. Instalar dependências
 npm install
-```
 
-### 3. Configurar as variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
-
-```env
-DATABASE_URL="postgresql://admin:adminpassword@localhost:5432/ggaa?schema=public"
-PORT=3333
-JWT_SECRET="sua_chave_secreta_aqui"
-```
-
-### 4. Subir o banco de dados
-
-```bash
+# 2. Subir o PostgreSQL no Docker
 docker compose up -d
-```
 
-### 5. Executar as migrações do Prisma
-
-```bash
+# 3. Rodar as migrações do banco
 npx prisma migrate dev
-```
 
-### 6. Iniciar o servidor
-
-```bash
+# 4. Iniciar a aplicação
 npm run dev
-```
 
-O servidor estará disponível em:
-
-- http://localhost:3333
-
-Validação da API:
-
-- http://localhost:3333/api/health
-
----
-
-# 📂 Estrutura de Pastas
-
-```text
-backend/
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-├── src/
-│   ├── config/
-│   ├── controllers/
-│   ├── lib/
-│   ├── middlewares/
-│   ├── routes/
-│   ├── services/
-│   ├── app.ts
-│   └── server.ts
-├── docker-compose.yml
-├── package.json
-└── tsconfig.json
-```
-
-### Descrição
-
-| Pasta/Arquivo | Descrição |
-|---------------|-----------|
-| `prisma/schema.prisma` | Definição dos modelos e relacionamentos do banco |
-| `prisma/migrations` | Histórico das migrações SQL |
-| `src/config` | Configurações e variáveis de ambiente |
-| `src/controllers` | Controladores das requisições HTTP |
-| `src/lib` | Instância única do Prisma Client |
-| `src/middlewares` | Middlewares de autenticação e autorização |
-| `src/routes` | Rotas da API REST |
-| `src/services` | Regras de negócio |
-| `src/app.ts` | Configuração do Express |
-| `src/server.ts` | Inicialização do servidor |
-
----
-
-# 📝 Licença
-
-Este projeto está licenciado sob a licença **MIT**. Consulte o arquivo `LICENSE` para mais informações.
-
----
-
-## Desenvolvedor
-
-Desenvolvido por **Seu Nome**
-
-- LinkedIn
-- GitHub
-
+Desenvolvido por Antonio Vinicius X. — LinkedIn | GitHub
