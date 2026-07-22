@@ -7,7 +7,7 @@ O projeto foi construído seguindo os princípios de **Arquitetura em Camadas (L
 
 ---
 
-# GGAA - Gestão de Grupos e Acompanhamento de Aprendizagem
+## GGAA - Gestão de Grupos e Acompanhamento de Aprendizagem
 
 API RESTful em **Node.js, Express, TypeScript e PostgreSQL**, projetada para centralizar a gestão pedagógica de turmas, avaliações em grupo, diário de classe e acompanhamento individual de alunos.
 
