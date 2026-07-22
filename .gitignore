@@ -1,0 +1,17 @@
+# Dependências do Node (pasta pesada gerada pelo npm)
+node_modules/
+
+# Arquivos de Build/Compilação
+dist/
+
+# Variáveis de Ambiente e Segredos (NUNCA envie o arquivo .env)
+.env
+
+# Logs do sistema
+*.log
+npm-debug.log*
+
+# Arquivos do sistema operacional ou IDE
+.DS_Store
+.vscode/
+.idea/

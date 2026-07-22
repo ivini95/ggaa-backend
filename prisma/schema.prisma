@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// MÓDULO: PROFESSORES E AUTENTICAÇÃO
+// ==========================================
+
+model Professor {
+  id                  Int                  @id @default(autoincrement())
+  nome                String
+  usuario             String               @unique
+  email               String               @unique
+  senhaHash           String               @map("senha_hash")
+  criadoEm            DateTime             @default(now()) @map("criado_em")
+  atualizadoEm        DateTime             @updatedAt @map("atualizado_em")
+  
+  turmas              Turma[]
+  historicoAlteracoes HistoricoAlteracao[]
+
+  @@map("profs")
+}
+
+// ==========================================
+// MÓDULO: TURMAS E ALUNOS
+// ==========================================
+
+model Turma {
+  id                    Int                    @id @default(autoincrement())
+  professorId           Int                    @map("professor_id")
+  nome                  String
+  curso                 String
+  disciplina            String
+  semestre              Int
+  ano                   Int
+  turno                 String
+  status                String
+  criadoEm              DateTime               @default(now()) @map("criado_em")
+  atualizadoEm          DateTime               @updatedAt @map("atualizado_em")
+
+  professor             Professor              @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  turmaAlunos           TurmaAluno[]
+  grupos                Grupo[]
+  atividades            Atividade[]
+  diariosClasse         DiarioClasse[]
+  ocorrencias           Ocorrencia[]
+  adaptacoesPedagogicas AdaptacaoPedagogica[]
+
+  @@map("turmas")
+}
+
+model Aluno {
+  id                    Int                    @id @default(autoincrement())
+  nome                  String
+  observacoes           String?                @db.Text
+
+  turmaAlunos           TurmaAluno[]
+  grupoIntegrantes      GrupoIntegrante[]
+  entregas              Entrega[]
+  tarefasGrupo          TarefaGrupo[]
+  ocorrencias           Ocorrencia[]
+  adaptacoesPedagogicas AdaptacaoPedagogica[]
+
+  @@map("alunos")
+}
+
+model TurmaAluno {
+  turmaId   Int     @map("turma_id")
+  alunoId   Int     @map("aluno_id")
+  ativo     Boolean @default(true)
+
+  turma     Turma   @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  aluno     Aluno   @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@id([turmaId, alunoId])
+  @@map("turma_alunos")
+}
+
+// ==========================================
+// MÓDULO: GRUPOS E INTEGRANTES
+// ==========================================
+
+model Grupo {
+  id               Int               @id @default(autoincrement())
+  turmaId          Int               @map("turma_id")
+  nome             String
+  criadoEm         DateTime          @default(now()) @map("criado_em")
+
+  turma            Turma             @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  grupoIntegrantes GrupoIntegrante[]
+  atividades       Atividade[]
+  tarefasGrupo     TarefaGrupo[]
+
+  @@map("grupos")
+}
+
+model GrupoIntegrante {
+  grupoId  Int     @map("grupo_id")
+  alunoId  Int     @map("aluno_id")
+  ativo    Boolean @default(true)
+
+  grupo    Grupo   @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  aluno    Aluno   @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@id([grupoId, alunoId])
+  @@map("grupo_integrantes")
+}
+
+// ==========================================
+// MÓDULO: ATIVIDADES E ENTREGAS
+// ==========================================
+
+model Atividade {
+  id                 Int       @id @default(autoincrement())
+  turmaId            Int       @map("turma_id")
+  grupoId            Int?      @map("grupo_id")
+  nome               String
+  descricao          String?   @db.Text
+  tipo               String
+  dataCriacao        DateTime  @default(now()) @map("data_criacao")
+  dataEntrega        DateTime  @map("data_entrega")
+  peso               Decimal   @db.Decimal(5, 2)
+  valorMaximo        Decimal   @db.Decimal(5, 2) @map("valor_maximo")
+  criteriosAvaliacao String?   @db.Text @map("criterios_avaliacao")
+
+  turma              Turma     @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  grupo              Grupo?    @relation(fields: [grupoId], references: [id], onDelete: SetNull)
+  entregas           Entrega[]
+
+  @@map("atividades")
+}
+
+model Entrega {
+  id            Int       @id @default(autoincrement())
+  atividadeId   Int       @map("atividade_id")
+  alunoId       Int       @map("aluno_id")
+  statusEntrega String    @map("status_entrega")
+  dataEntrega   DateTime? @map("data_entrega")
+  nota          Decimal   @db.Decimal(5, 2)
+  feedback      String?   @db.Text
+  comentarios   String?   @db.Text
+
+  atividade     Atividade @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+  aluno         Aluno     @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+
+  @@map("entregas")
+}
+
+// ==========================================
+// MÓDULO: DIVISÃO DE TAREFAS (INTERNA AOS GRUPOS)
+// ==========================================
+
+model TarefaGrupo {
+  id      Int       @id @default(autoincrement())
+  grupoId Int       @map("grupo_id")
+  alunoId Int?      @map("aluno_id")
+  titulo  String
+  prazo   DateTime?
+  status  String
+
+  grupo   Grupo     @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  aluno   Aluno?    @relation(fields: [alunoId], references: [id], onDelete: SetNull)
+
+  @@map("tarefas_grupo")
+}
+
+// ==========================================
+// MÓDULO: DIÁRIO DE CLASSE E OCORRÊNCIAS
+// ==========================================
+
+model DiarioClasse {
+  id                   Int      @id @default(autoincrement())
+  turmaId              Int      @map("turma_id")
+  data                 DateTime @db.Date
+  conteudoMinistrado   String   @map("conteudo_ministrado") @db.Text
+  objetivos            String?  @db.Text
+  metodologia          String?  @db.Text
+  recursos             String?  @db.Text
+  atividadeRealizada   String?  @map("atividade_realizada") @db.Text
+  ocorrencias          String?  @db.Text
+  adaptacoesRealizadas String?  @map("adaptacoes_realizadas") @db.Text
+  observacoesGerais    String?  @map("observacoes_gerais") @db.Text
+
+  turma                Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+
+  @@map("diario_classes")
+}
+
+model Ocorrencia {
+  id           Int      @id @default(autoincrement())
+  turmaId      Int      @map("turma_id")
+  alunoId      Int?     @map("aluno_id")
+  tipo         String
+  descricao    String   @db.Text
+  dataRegistro DateTime @default(now()) @map("data_registro")
+
+  turma        Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  aluno        Aluno?   @relation(fields: [alunoId], references: [id], onDelete: SetNull)
+
+  @@map("ocorrencias")
+}
+
+model AdaptacaoPedagogica {
+  id           Int      @id @default(autoincrement())
+  alunoId      Int      @map("aluno_id")
+  turmaId      Int      @map("turma_id")
+  tipo         String
+  descricao    String   @db.Text
+  dataRegistro DateTime @default(now()) @map("data_registro")
+
+  aluno        Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  turma        Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+
+  @@map("adaptacoes_pedagogicas")
+}
+
+// ==========================================
+// MÓDULO: HISTÓRICO / AUDITORIA
+// ==========================================
+
+model HistoricoAlteracao {
+  id              Int       @id @default(autoincrement())
+  professorId     Int       @map("professor_id")
+  tabelaAfetada   String    @map("tabela_afetada")
+  registroId      Int       @map("registro_id")
+  oQueFoiAlterado String    @map("o_que_foi_alterado") @db.Text
+  dataAlteracao   DateTime  @default(now()) @map("data_alteracao")
+
+  professor       Professor @relation(fields: [professorId], references: [id], onDelete: Cascade)
+
+  @@map("historico_alteracoes")
+}
