@@ -39,7 +39,7 @@ model Turma {
   semestre              Int
   ano                   Int
   turno                 String
-  status                String
+  status                StatusTurma           @default(ATIVA)
   criadoEm              DateTime               @default(now()) @map("criado_em")
   atualizadoEm          DateTime               @updatedAt @map("atualizado_em")
 
@@ -79,6 +79,11 @@ model TurmaAluno {
 
   @@id([turmaId, alunoId])
   @@map("turma_alunos")
+}
+
+enum StatusTurma {
+  ATIVA
+  ARQUIVADA
 }
 
 // ==========================================
