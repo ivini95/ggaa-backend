@@ -51,4 +51,4 @@ npx prisma migrate dev
 # 4. Iniciar a aplicação
 npm run dev
 
-Desenvolvido por Antonio Vinicius X. — LinkedIn | GitHub
+Desenvolvido por Antonio Vinicius Ximenes — LinkedIn | GitHub
