@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { authRoutes } from './routes/auth.routes.js';
 import { turmaRoutes } from './routes/turma.routes.js';
+import { alunoRoutes } from './routes/aluno.route.js';
 
 dotenv.config();
 
@@ -16,6 +17,8 @@ app.use(express.json()); // Habilita o parse de JSON no corpo das requisições 
 app.use('/api/auth', authRoutes);
 
 app.use('/api/turmas', turmaRoutes);
+
+app.use('/api/alunos', alunoRoutes);
 
 // Rota de teste/saúde da API
 app.get('/api/health', (req, res) => {
