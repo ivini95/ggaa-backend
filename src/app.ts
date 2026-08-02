@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { authRoutes } from './routes/auth.routes.js';
 import { turmaRoutes } from './routes/turma.routes.js';
 import { alunoRoutes } from './routes/aluno.route.js';
+import { grupoRoutes } from './routes/grupo.routes.js';
 
 dotenv.config();
 
@@ -19,6 +20,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/turmas', turmaRoutes);
 
 app.use('/api/alunos', alunoRoutes);
+
+app.use('/api/grupos', grupoRoutes);
 
 // Rota de teste/saúde da API
 app.get('/api/health', (req, res) => {
