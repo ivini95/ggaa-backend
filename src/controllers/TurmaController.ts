@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { StatusTurma } from '@prisma/client';
 import { TurmaService } from '../services/TurmaService.js';
+import { AlunoService } from '../services/AlunoService.js';
 
 const turmaService = new TurmaService();
+
 
 export class TurmaController {
   // POST /api/turmas
@@ -26,6 +28,27 @@ export class TurmaController {
       });
 
       return res.status(201).json(turma);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async listarAlunos(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { apenasAtivos } = req.query;
+      const professorId = req.professorId!;
+
+      console.log('--> Tentando buscar turma...', { id, professorId, apenasAtivos });
+      const alunoService = new AlunoService();
+      await turmaService.buscarPorId(Number(id), professorId);
+
+      // Se a query string for explicitamente 'true', filtra só os ativos. Caso contrário, traz todos.
+      const filtrarAtivos = apenasAtivos === 'true' ? true : undefined;
+
+      const alunos = await alunoService.listarPorTurma(Number(id), filtrarAtivos);
+
+      return res.json(alunos);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
