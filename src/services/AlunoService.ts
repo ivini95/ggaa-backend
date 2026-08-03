@@ -3,7 +3,7 @@ import { prisma } from '../lib/prisma.js';
 interface CriarAlunoDTO {
   nome: string;
   observacoes?: string;
-  turmaId?: number; // Opcional: matricular direto em uma turma
+  turmaId: number; 
 }
 
 interface AtualizarAlunoDTO {
@@ -13,9 +13,8 @@ interface AtualizarAlunoDTO {
 }
 
 export class AlunoService {
-  // 1. Criar Aluno (e opcionalmente matricular em uma turma)
+  // 1. Criar Aluno (AGORA OBRIGA A TER UMA TURMA)
   async criar(dados: CriarAlunoDTO) {
-    if (dados.turmaId) {
     const turmaExiste = await prisma.turma.findUnique({
       where: { id: dados.turmaId }
     });
@@ -23,23 +22,97 @@ export class AlunoService {
     if (!turmaExiste) {
       throw new Error('A turma informada não existe.');
     }
-  }
+
     const aluno = await prisma.aluno.create({
       data: {
         nome: dados.nome,
         observacoes: dados.observacoes,
-        ...(dados.turmaId && {
-          turmaAlunos: {
-            create: {
-              turmaId: dados.turmaId,
-              ativo: true
-            }
+        turmaAlunos: {
+          create: {
+            turmaId: dados.turmaId,
+            ativo: true
           }
-        })
+        }
+      },
+      include: {
+        turmaAlunos: true
       }
     });
 
     return aluno;
+  }
+
+  async trocarTurma(alunoId: number, turmaOrigemId: number, turmaDestinoId: number) {
+    // 1. Valida se a turma de origem e a turma de destino são diferentes
+    if (turmaOrigemId === turmaDestinoId) {
+      throw new Error('A turma de origem e a turma de destino devem ser diferentes.');
+    }
+
+    // 2. Valida existência do aluno
+    await this.buscarPorId(alunoId);
+
+    // 3. Valida existência da turma de destino
+    const turmaDestino = await prisma.turma.findUnique({ where: { id: turmaDestinoId } });
+    if (!turmaDestino) {
+      throw new Error('A turma de destino informada não existe.');
+    }
+
+    // 4. Valida se o aluno REALMENTE pertence à turma de origem informada
+    const vinculoOrigem = await prisma.turmaAluno.findUnique({
+      where: {
+        turmaId_alunoId: {
+          turmaId: turmaOrigemId,
+          alunoId
+        }
+      }
+    });
+
+    if (!vinculoOrigem) {
+      throw new Error('O aluno não está matriculado na turma de origem informada.');
+    }
+
+    // 5. Executa a transferência em transação segura
+    return await prisma.$transaction(async (tx) => {
+      // a) Deleta o vínculo com a turma de origem
+      await tx.turmaAluno.delete({
+        where: {
+          turmaId_alunoId: {
+            turmaId: turmaOrigemId,
+            alunoId
+          }
+        }
+      });
+
+      // b) Se já existir um histórico/vínculo antigo na turma de destino, atualiza; senão, cria
+      const vinculoDestinoExistente = await tx.turmaAluno.findUnique({
+        where: {
+          turmaId_alunoId: {
+            turmaId: turmaDestinoId,
+            alunoId
+          }
+        }
+      });
+
+      if (vinculoDestinoExistente) {
+        return await tx.turmaAluno.update({
+          where: {
+            turmaId_alunoId: {
+              turmaId: turmaDestinoId,
+              alunoId
+            }
+          },
+          data: { ativo: true }
+        });
+      }
+
+      return await tx.turmaAluno.create({
+        data: {
+          alunoId,
+          turmaId: turmaDestinoId,
+          ativo: true
+        }
+      });
+    });
   }
 
   // 2. Listar Todos os Alunos
@@ -50,12 +123,17 @@ export class AlunoService {
   }
 
   // 3. Listar Alunos por Turma (por padrão traz apenas os ativos na turma)
-  async listarPorTurma(turmaId: number, apenasAtivos: boolean = true) {
+  // 3. Listar Alunos por Turma (traz todos por padrão, a menos que especificado)
+  async listarPorTurma(turmaId: number, apenasAtivos?: boolean) {
+    const whereCondition: any = { turmaId };
+
+    // Só aplica o filtro se 'apenasAtivos' for explicitamente true
+    if (apenasAtivos === true) {
+      whereCondition.ativo = true;
+    }
+
     const turmaAlunos = await prisma.turmaAluno.findMany({
-      where: {
-        turmaId,
-        ...(apenasAtivos && { ativo: true })
-      },
+      where: whereCondition,
       include: {
         aluno: true
       },
@@ -69,7 +147,6 @@ export class AlunoService {
       ativoNaTurma: ta.ativo
     }));
   }
-
   // 4. Buscar Aluno por ID
   async buscarPorId(alunoId: number) {
     const aluno = await prisma.aluno.findUnique({

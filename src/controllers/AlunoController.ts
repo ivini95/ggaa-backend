@@ -9,17 +9,35 @@ export class AlunoController {
     try {
       const { nome, observacoes, turmaId } = req.body;
 
-      if (!nome) {
-        return res.status(400).json({ error: 'O nome do aluno é obrigatório.' });
+      // ✅ Validação rigorosa
+      if (!nome || !turmaId) {
+        return res.status(400).json({ error: 'O nome e a turmaId são obrigatórios.' });
       }
 
       const aluno = await alunoService.criar({
         nome,
         observacoes,
-        turmaId: turmaId ? Number(turmaId) : undefined
+        turmaId: Number(turmaId)
       });
 
       return res.status(201).json(aluno);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  async trocarTurma(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { turmaOrigemId, turmaDestinoId } = req.body;
+
+      if (!turmaOrigemId || !turmaDestinoId) {
+        return res.status(400).json({ error: 'As turmas de origem e destino são obrigatórias.' });
+      }
+
+      await alunoService.trocarTurma(Number(id), Number(turmaOrigemId), Number(turmaDestinoId));
+
+      return res.json({ message: 'Aluno transferido de turma com sucesso!' });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }
