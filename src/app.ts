@@ -5,25 +5,24 @@ import { authRoutes } from './routes/auth.routes.js';
 import { turmaRoutes } from './routes/turma.routes.js';
 import { alunoRoutes } from './routes/aluno.route.js';
 import { grupoRoutes } from './routes/grupo.routes.js';
+import { atividadeRoutes } from './routes/atividade.route.js';
+import { validateBodyMiddleware } from './middlewares/validateBody.middleware.js';
 
 dotenv.config();
 
 const app = express();
 
-// Middlewares globais
 app.use(cors());
-app.use(express.json()); // Habilita o parse de JSON no corpo das requisições (req.body)
+app.use(express.json());
 
-// Registra as rotas de Autenticação sob o prefixo /api/auth
+app.use(validateBodyMiddleware);
+
 app.use('/api/auth', authRoutes);
-
 app.use('/api/turmas', turmaRoutes);
-
 app.use('/api/alunos', alunoRoutes);
-
 app.use('/api/grupos', grupoRoutes);
+app.use('/api/atividades', atividadeRoutes);
 
-// Rota de teste/saúde da API
 app.get('/api/health', (req, res) => {
   return res.json({ 
     status: 'ok', 
