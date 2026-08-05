@@ -6,7 +6,9 @@ import { turmaRoutes } from './routes/turma.routes.js';
 import { alunoRoutes } from './routes/aluno.route.js';
 import { grupoRoutes } from './routes/grupo.routes.js';
 import { atividadeRoutes } from './routes/atividade.route.js';
+import { entregaRoutes } from './routes/entrega.routes.js';
 import { validateBodyMiddleware } from './middlewares/validateBody.middleware.js';
+
 
 dotenv.config();
 
@@ -22,6 +24,7 @@ app.use('/api/turmas', turmaRoutes);
 app.use('/api/alunos', alunoRoutes);
 app.use('/api/grupos', grupoRoutes);
 app.use('/api/atividades', atividadeRoutes);
+app.use('/api/entregas', entregaRoutes);
 
 app.get('/api/health', (req, res) => {
   return res.json({ 
