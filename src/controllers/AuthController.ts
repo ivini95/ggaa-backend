@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/AuthService.js';
 
 const authService = new AuthService();
@@ -25,7 +25,7 @@ export class AuthController {
   }
 
   // POST /api/auth/login
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { usuarioOuEmail, senha } = req.body;
 
@@ -37,6 +37,7 @@ export class AuthController {
 
       return res.json(resultado);
     } catch (error: any) {
+      next(error);
       return res.status(401).json({ error: error.message });
     }
   }
