@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { EntregaService } from '../services/EntregaService';
+import { EntregaService } from '../services/EntregaService.js';
 
 const entregaService = new EntregaService();
 
